@@ -32,7 +32,6 @@ fun HomeScreen(
     val state by viewModel.state.collectAsState()
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // 테마 토글 버튼 (우상단 고정)
         OutlinedButton(
             onClick = onToggleTheme,
             modifier = Modifier
@@ -42,7 +41,6 @@ fun HomeScreen(
             Text(if (isDarkMode) "라이트모드" else "다크모드")
         }
 
-        // 메인 컨텐츠 (중앙 정렬)
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -100,7 +98,7 @@ fun HomeScreen(
             Spacer(Modifier.height(12.dp))
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf(30, 60, 90).forEach { minutes ->
+                listOf(1, 30, 60, 90).forEach { minutes ->
                     FilterChip(
                         selected = state.intervalMinutes == minutes,
                         onClick = { viewModel.updateInterval(minutes) },

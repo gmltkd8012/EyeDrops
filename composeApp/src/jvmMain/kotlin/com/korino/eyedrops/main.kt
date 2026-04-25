@@ -5,8 +5,11 @@ import androidx.compose.ui.window.application
 import com.korino.eyedrops.data.repository.ReminderRepositoryImpl
 import com.korino.eyedrops.notification.DesktopNotificationService
 import com.korino.eyedrops.viewmodel.EyeDropViewModel
+import java.awt.Toolkit
 
 fun main() {
+    Toolkit.getDefaultToolkit()
+
     val notificationService = DesktopNotificationService()
     val repository = ReminderRepositoryImpl()
     val viewModel = EyeDropViewModel(repository, notificationService)
