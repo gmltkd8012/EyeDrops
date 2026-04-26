@@ -21,24 +21,62 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.korino.eyedrops.domain.model.ReminderState
 import com.korino.eyedrops.viewmodel.EyeDropViewModel
 
 @Composable
 fun HomeScreen(
     viewModel: EyeDropViewModel,
     isDarkMode: Boolean,
-    onToggleTheme: () -> Unit
+    isCompact: Boolean,
+    onToggleTheme: () -> Unit,
+    onToggleCompact: () -> Unit
 ) {
     val state by viewModel.state.collectAsState()
 
+    if (isCompact) {
+        CompactLayout(
+            state = state,
+            isDarkMode = isDarkMode,
+            onToggleTimer = { viewModel.toggleTimer() },
+            onToggleTheme = onToggleTheme,
+            onToggleCompact = onToggleCompact
+        )
+    } else {
+        FullLayout(
+            state = state,
+            isDarkMode = isDarkMode,
+            onToggleTimer = { viewModel.toggleTimer() },
+            onUpdateInterval = { viewModel.updateInterval(it) },
+            onToggleTheme = onToggleTheme,
+            onToggleCompact = onToggleCompact
+        )
+    }
+}
+
+@Composable
+private fun FullLayout(
+    state: ReminderState,
+    isDarkMode: Boolean,
+    onToggleTimer: () -> Unit,
+    onUpdateInterval: (Int) -> Unit,
+    onToggleTheme: () -> Unit,
+    onToggleCompact: () -> Unit
+) {
     Box(modifier = Modifier.fillMaxSize()) {
-        OutlinedButton(
-            onClick = onToggleTheme,
+        // 우상단 버튼 Row
+        Row(
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .padding(16.dp)
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text(if (isDarkMode) "라이트모드" else "다크모드")
+            OutlinedButton(onClick = onToggleTheme) {
+                Text(if (isDarkMode) "라이트모드" else "다크모드")
+            }
+            OutlinedButton(onClick = onToggleCompact) {
+                Text("축소")
+            }
         }
 
         Column(
@@ -76,7 +114,7 @@ fun HomeScreen(
             Spacer(Modifier.height(40.dp))
 
             Button(
-                onClick = { viewModel.toggleTimer() },
+                onClick = onToggleTimer,
                 modifier = Modifier
                     .fillMaxWidth(0.4f)
                     .height(52.dp)
@@ -101,11 +139,61 @@ fun HomeScreen(
                 listOf(1, 30, 60, 90).forEach { minutes ->
                     FilterChip(
                         selected = state.intervalMinutes == minutes,
-                        onClick = { viewModel.updateInterval(minutes) },
+                        onClick = { onUpdateInterval(minutes) },
                         label = { Text("${minutes}분") }
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun CompactLayout(
+    state: ReminderState,
+    isDarkMode: Boolean,
+    onToggleTimer: () -> Unit,
+    onToggleTheme: () -> Unit,
+    onToggleCompact: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = formatTime(state.remainingSeconds),
+            fontSize = 48.sp,
+            color = if (state.isRunning)
+                MaterialTheme.colorScheme.primary
+            else
+                MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Spacer(Modifier.height(12.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            OutlinedButton(onClick = onToggleTheme) {
+                Text(if (isDarkMode) "라이트" else "다크")
+            }
+            OutlinedButton(onClick = onToggleCompact) {
+                Text("확장")
+            }
+        }
+
+        Spacer(Modifier.height(12.dp))
+
+        Button(
+            onClick = onToggleTimer,
+            modifier = Modifier.fillMaxWidth(0.6f)
+        ) {
+            Text(if (state.isRunning) "정지" else "시작")
         }
     }
 }
