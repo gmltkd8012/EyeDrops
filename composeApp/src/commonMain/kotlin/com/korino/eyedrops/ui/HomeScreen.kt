@@ -1,5 +1,15 @@
 package com.korino.eyedrops.ui
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateBounds
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,8 +19,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.Fullscreen
+import androidx.compose.material.icons.filled.FullscreenExit
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -18,12 +36,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.korino.eyedrops.domain.model.ReminderState
 import com.korino.eyedrops.viewmodel.EyeDropViewModel
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun HomeScreen(
     viewModel: EyeDropViewModel,
@@ -34,166 +54,110 @@ fun HomeScreen(
 ) {
     val state by viewModel.state.collectAsState()
 
-    if (isCompact) {
-        CompactLayout(
-            state = state,
-            isDarkMode = isDarkMode,
-            onToggleTimer = { viewModel.toggleTimer() },
-            onToggleTheme = onToggleTheme,
-            onToggleCompact = onToggleCompact
-        )
-    } else {
-        FullLayout(
-            state = state,
-            isDarkMode = isDarkMode,
-            onToggleTimer = { viewModel.toggleTimer() },
-            onUpdateInterval = { viewModel.updateInterval(it) },
-            onToggleTheme = onToggleTheme,
-            onToggleCompact = onToggleCompact
-        )
-    }
-}
+    val contentPadding by animateDpAsState(
+        targetValue = if (isCompact) 16.dp else 32.dp,
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
+    )
+    val spacerHeight by animateDpAsState(
+        targetValue = if (isCompact) 12.dp else 40.dp,
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
+    )
 
-@Composable
-private fun FullLayout(
-    state: ReminderState,
-    isDarkMode: Boolean,
-    onToggleTimer: () -> Unit,
-    onUpdateInterval: (Int) -> Unit,
-    onToggleTheme: () -> Unit,
-    onToggleCompact: () -> Unit
-) {
-    Box(modifier = Modifier.fillMaxSize()) {
-        // 우상단 버튼 Row
-        Row(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            OutlinedButton(onClick = onToggleTheme) {
-                Text(if (isDarkMode) "라이트모드" else "다크모드")
-            }
-            OutlinedButton(onClick = onToggleCompact) {
-                Text("축소")
-            }
-        }
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(32.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = "💧 EyeDrops",
-                style = MaterialTheme.typography.headlineLarge,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-
-            Spacer(Modifier.height(40.dp))
-
-            Text(
-                text = formatTime(state.remainingSeconds),
-                fontSize = 72.sp,
-                color = if (state.isRunning)
-                    MaterialTheme.colorScheme.primary
-                else
-                    MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Spacer(Modifier.height(8.dp))
-
-            Text(
-                text = if (state.isRunning) "다음 알림까지" else "타이머 정지 중",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Spacer(Modifier.height(40.dp))
-
-            Button(
-                onClick = onToggleTimer,
+    LookaheadScope {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth(0.4f)
-                    .height(52.dp)
+                    .fillMaxSize()
+                    .padding(contentPadding),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = if (state.isRunning) "정지" else "시작",
-                    style = MaterialTheme.typography.titleMedium
+                    text = formatTime(state.remainingSeconds),
+                    fontSize = if (isCompact) 48.sp else 72.sp,
+                    color = if (state.isRunning)
+                        MaterialTheme.colorScheme.primary
+                    else
+                        MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-            }
 
-            Spacer(Modifier.height(40.dp))
+                if (!isCompact) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Spacer(Modifier.height(8.dp))
 
-            Text(
-                text = "알림 간격",
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+                        Text(
+                            text = if (state.isRunning) "다음 알림까지" else "타이머 정지 중",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
 
-            Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(spacerHeight))
 
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf(1, 30, 60, 90).forEach { minutes ->
-                    FilterChip(
-                        selected = state.intervalMinutes == minutes,
-                        onClick = { onUpdateInterval(minutes) },
-                        label = { Text("${minutes}분") }
-                    )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .animateBounds(this@LookaheadScope),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedButton(
+                        modifier = Modifier.weight(1f),
+                        onClick = onToggleTheme
+                    ) {
+                        Icon(
+                            imageVector = if (isDarkMode) Icons.Filled.WbSunny else Icons.Filled.DarkMode,
+                            contentDescription = null
+                        )
+                    }
+                    Spacer(Modifier.width(8.dp))
+                    OutlinedButton(
+                        modifier = Modifier.weight(1f),
+                        onClick = { viewModel.toggleTimer() }
+                    ) {
+                        Icon(
+                            imageVector = if (state.isRunning) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                            contentDescription = null
+                        )
+                    }
+                    Spacer(Modifier.width(8.dp))
+                    OutlinedButton(
+                        modifier = Modifier.weight(1f),
+                        onClick = onToggleCompact
+                    ) {
+                        Icon(
+                            imageVector = if (isCompact) Icons.Filled.Fullscreen else Icons.Filled.FullscreenExit,
+                            contentDescription = null
+                        )
+                    }
+                }
+
+                AnimatedVisibility(
+                    visible = !isCompact,
+                    enter = fadeIn() + expandVertically(),
+                    exit = fadeOut() + shrinkVertically()
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Spacer(Modifier.height(40.dp))
+                        Text(
+                            text = "알림 간격",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(Modifier.height(12.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            listOf(1, 30, 60, 90).forEach { minutes ->
+                                FilterChip(
+                                    selected = state.intervalMinutes == minutes,
+                                    onClick = { viewModel.updateInterval(minutes) },
+                                    label = { Text("${minutes}분") }
+                                )
+                            }
+                        }
+                    }
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun CompactLayout(
-    state: ReminderState,
-    isDarkMode: Boolean,
-    onToggleTimer: () -> Unit,
-    onToggleTheme: () -> Unit,
-    onToggleCompact: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = formatTime(state.remainingSeconds),
-            fontSize = 48.sp,
-            color = if (state.isRunning)
-                MaterialTheme.colorScheme.primary
-            else
-                MaterialTheme.colorScheme.onSurfaceVariant
-        )
-
-        Spacer(Modifier.height(12.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            OutlinedButton(onClick = onToggleTheme) {
-                Text(if (isDarkMode) "라이트" else "다크")
-            }
-            OutlinedButton(onClick = onToggleCompact) {
-                Text("확장")
-            }
-        }
-
-        Spacer(Modifier.height(12.dp))
-
-        Button(
-            onClick = onToggleTimer,
-            modifier = Modifier.fillMaxWidth(0.6f)
-        ) {
-            Text(if (state.isRunning) "정지" else "시작")
         }
     }
 }
