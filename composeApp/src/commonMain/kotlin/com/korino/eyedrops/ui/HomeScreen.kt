@@ -17,11 +17,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.FullscreenExit
+import androidx.compose.material.icons.filled.NewReleases
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.WbSunny
@@ -29,6 +31,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -48,6 +51,7 @@ fun HomeScreen(
     viewModel: EyeDropViewModel,
     isDarkMode: Boolean,
     isCompact: Boolean,
+    latestVersion: String? = null,
     onToggleTheme: () -> Unit,
     onToggleCompact: () -> Unit
 ) {
@@ -62,94 +66,136 @@ fun HomeScreen(
         animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
     )
 
-    LookaheadScope {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
+    Column(modifier = Modifier.fillMaxSize()) {
+        AnimatedVisibility(
+            visible = latestVersion != null && !isCompact,
+            enter = fadeIn() + expandVertically(),
+            exit = fadeOut() + shrinkVertically()
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(contentPadding)
-                    .then(AnimatePlacementNodeElement(this@LookaheadScope)),
-                horizontalAlignment = Alignment.CenterHorizontally,
+            latestVersion?.let { UpdateBanner(it) }
+        }
+
+        LookaheadScope {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = formatTime(state.remainingSeconds),
-                    fontSize = if (isCompact) 48.sp else 72.sp,
-                    color = if (state.isRunning)
-                        MaterialTheme.colorScheme.primary
-                    else
-                        MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-
-                if (!isCompact) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Spacer(Modifier.height(8.dp))
-                        Text(
-                            text = if (state.isRunning) "다음 알림까지" else "타이머 정지 중",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
-                Spacer(Modifier.height(spacerHeight))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    verticalAlignment = Alignment.CenterVertically
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(contentPadding)
+                        .then(AnimatePlacementNodeElement(this@LookaheadScope)),
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    OutlinedButton(
-                        modifier = Modifier.weight(1f),
-                        onClick = onToggleTheme
-                    ) {
-                        Icon(
-                            imageVector = if (isDarkMode) Icons.Filled.WbSunny else Icons.Filled.DarkMode,
-                            contentDescription = null
-                        )
-                    }
-                    Spacer(Modifier.width(8.dp))
-                    OutlinedButton(
-                        modifier = Modifier.weight(1f),
-                        onClick = { viewModel.toggleTimer() }
-                    ) {
-                        Icon(
-                            imageVector = if (state.isRunning) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-                            contentDescription = null
-                        )
-                    }
-                    Spacer(Modifier.width(8.dp))
-                    OutlinedButton(
-                        modifier = Modifier.weight(1f),
-                        onClick = onToggleCompact
-                    ) {
-                        Icon(
-                            imageVector = if (isCompact) Icons.Filled.Fullscreen else Icons.Filled.FullscreenExit,
-                            contentDescription = null
-                        )
-                    }
-                }
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Spacer(Modifier.height(40.dp))
                     Text(
-                        text = "알림 간격",
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        text = formatTime(state.remainingSeconds),
+                        fontSize = if (isCompact) 48.sp else 72.sp,
+                        color = if (state.isRunning)
+                            MaterialTheme.colorScheme.primary
+                        else
+                            MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    Spacer(Modifier.height(12.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        listOf(1, 30, 60, 90).forEach { minutes ->
-                            FilterChip(
-                                selected = state.intervalMinutes == minutes,
-                                onClick = { viewModel.updateInterval(minutes) },
-                                label = { Text("${minutes}분") }
+
+                    if (!isCompact) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                text = if (state.isRunning) "다음 알림까지" else "타이머 정지 중",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
+                        }
+                    }
+
+                    Spacer(Modifier.height(spacerHeight))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OutlinedButton(
+                            modifier = Modifier.weight(1f),
+                            onClick = onToggleTheme
+                        ) {
+                            Icon(
+                                imageVector = if (isDarkMode) Icons.Filled.WbSunny else Icons.Filled.DarkMode,
+                                contentDescription = null
+                            )
+                        }
+                        Spacer(Modifier.width(8.dp))
+                        OutlinedButton(
+                            modifier = Modifier.weight(1f),
+                            onClick = { viewModel.toggleTimer() }
+                        ) {
+                            Icon(
+                                imageVector = if (state.isRunning) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                                contentDescription = null
+                            )
+                        }
+                        Spacer(Modifier.width(8.dp))
+                        OutlinedButton(
+                            modifier = Modifier.weight(1f),
+                            onClick = onToggleCompact
+                        ) {
+                            Icon(
+                                imageVector = if (isCompact) Icons.Filled.Fullscreen else Icons.Filled.FullscreenExit,
+                                contentDescription = null
+                            )
+                        }
+                    }
+
+                    if (!isCompact) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Spacer(Modifier.height(40.dp))
+                            Text(
+                                text = "알림 간격",
+                                style = MaterialTheme.typography.titleSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(Modifier.height(12.dp))
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                listOf(1, 30, 60, 90).forEach { minutes ->
+                                    FilterChip(
+                                        selected = state.intervalMinutes == minutes,
+                                        onClick = { viewModel.updateInterval(minutes) },
+                                        label = { Text("${minutes}분") }
+                                    )
+                                }
+                            }
                         }
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun UpdateBanner(version: String) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.primaryContainer
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Filled.NewReleases,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                modifier = Modifier.size(16.dp)
+            )
+            Spacer(Modifier.width(8.dp))
+            Text(
+                text = "업데이트가 있습니다  v$version",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
         }
     }
 }

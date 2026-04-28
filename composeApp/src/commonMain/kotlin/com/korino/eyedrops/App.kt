@@ -21,7 +21,11 @@ private val FullWindowSize = DpSize(480.dp, 520.dp)
 private val CompactWindowSize = DpSize(300.dp, 200.dp)
 
 @Composable
-fun App(viewModel: EyeDropViewModel, windowState: WindowState) {
+fun App(
+    viewModel: EyeDropViewModel,
+    windowState: WindowState,
+    latestVersion: String? = null,
+) {
     var isDarkMode by remember { mutableStateOf(false) }
     var isCompact by remember { mutableStateOf(false) }
 
@@ -38,6 +42,7 @@ fun App(viewModel: EyeDropViewModel, windowState: WindowState) {
                 viewModel = viewModel,
                 isDarkMode = isDarkMode,
                 isCompact = isCompact,
+                latestVersion = latestVersion,
                 onToggleTheme = { isDarkMode = !isDarkMode },
                 onToggleCompact = { isCompact = !isCompact }
             )
