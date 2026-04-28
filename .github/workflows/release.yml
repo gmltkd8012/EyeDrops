@@ -40,6 +40,13 @@ jobs:
       - name: Build MSI
         run: ./gradlew :composeApp:packageMsi
 
+      - name: Upload jpackage error log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jpackage-logs
+          path: composeApp/build/compose/logs/
+
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
         with:

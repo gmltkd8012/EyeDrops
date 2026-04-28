@@ -39,9 +39,9 @@ compose.desktop {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi)
             packageName = "EyeDrops"
             packageVersion = "1.0.0"
-            description = "눈 건강 알림 타이머"
+            description = "Eye Drop Reminder Timer"
             vendor = "Korino"
-            copyright = "© 2025 Korino"
+            copyright = "Copyright 2025 Korino"
 
             macOS {
                 bundleID = "com.korino.eyedrops"
