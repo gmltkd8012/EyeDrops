@@ -1,10 +1,8 @@
 package com.korino.eyedrops.ui
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateBounds
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -41,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.korino.eyedrops.ui.anim.AnimatePlacementNodeElement
 import com.korino.eyedrops.viewmodel.EyeDropViewModel
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -64,13 +63,16 @@ fun HomeScreen(
     )
 
     LookaheadScope {
-        Box(modifier = Modifier.fillMaxSize()) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(contentPadding),
+                    .fillMaxWidth()
+                    .padding(contentPadding)
+                    .then(AnimatePlacementNodeElement(this@LookaheadScope)),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
             ) {
                 Text(
                     text = formatTime(state.remainingSeconds),
@@ -84,7 +86,6 @@ fun HomeScreen(
                 if (!isCompact) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Spacer(Modifier.height(8.dp))
-
                         Text(
                             text = if (state.isRunning) "다음 알림까지" else "타이머 정지 중",
                             style = MaterialTheme.typography.bodyLarge,
@@ -96,9 +97,7 @@ fun HomeScreen(
                 Spacer(Modifier.height(spacerHeight))
 
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .animateBounds(this@LookaheadScope),
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -132,28 +131,21 @@ fun HomeScreen(
                         )
                     }
                 }
-
-                AnimatedVisibility(
-                    visible = !isCompact,
-                    enter = fadeIn() + expandVertically(),
-                    exit = fadeOut() + shrinkVertically()
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Spacer(Modifier.height(40.dp))
-                        Text(
-                            text = "알림 간격",
-                            style = MaterialTheme.typography.titleSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(Modifier.height(12.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            listOf(1, 30, 60, 90).forEach { minutes ->
-                                FilterChip(
-                                    selected = state.intervalMinutes == minutes,
-                                    onClick = { viewModel.updateInterval(minutes) },
-                                    label = { Text("${minutes}분") }
-                                )
-                            }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Spacer(Modifier.height(40.dp))
+                    Text(
+                        text = "알림 간격",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        listOf(1, 30, 60, 90).forEach { minutes ->
+                            FilterChip(
+                                selected = state.intervalMinutes == minutes,
+                                onClick = { viewModel.updateInterval(minutes) },
+                                label = { Text("${minutes}분") }
+                            )
                         }
                     }
                 }
