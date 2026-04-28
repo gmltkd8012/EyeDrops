@@ -36,9 +36,22 @@ compose.desktop {
         mainClass = "com.korino.eyedrops.MainKt"
 
         nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "com.korino.eyedrops"
+            targetFormats(TargetFormat.Dmg, TargetFormat.Msi)
+            packageName = "EyeDrops"
             packageVersion = "1.0.0"
+            description = "눈 건강 알림 타이머"
+            vendor = "Korino"
+            copyright = "© 2025 Korino"
+
+            macOS {
+                bundleID = "com.korino.eyedrops"
+            }
+            windows {
+                // uuidgen 으로 생성한 고정 UUID — 버전 업그레이드 추적에 사용되므로 변경 금지
+                upgradeUuid = "A1B2C3D4-E5F6-7890-ABCD-EF1234567890"
+                menuGroup = "EyeDrops"
+                shortcut = true
+            }
         }
     }
 }
